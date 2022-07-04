@@ -2,8 +2,8 @@ const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
 const fs = require('fs');
-// const { data } = require('./models/data');
 const { readData } = require('./models/async_data');
+const {readDataFromRedis} = require('./models/redis');
 
 const app = express();
 app.use(express.json());
@@ -16,9 +16,16 @@ morgan.token('JSON', (request, response) => {
 })// add a new token to the morgan logger
 
 app.get('/', (req, res) => {
-  readData((data) => {
-    res.json(data);
-  })
+  // readData().then(data=>res.json(data));
+  readDataFromRedis().then(data=>res.json(JSON.parse(data)));
+});
+
+app.get('/api/models', (req, res) => {
+  // readData((data) => {
+  //   res.json(data);
+  // })
+  // readData().then(data=>res.json(data));
+  readDataFromRedis().then(data=>res.json(data));
 });
 
 const PORT = process.env.PORT || 3001
