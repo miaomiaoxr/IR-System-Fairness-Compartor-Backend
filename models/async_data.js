@@ -14,14 +14,15 @@ async function listDir() { //list all files in the csv folder
 
 const processSinglefile = async (file) => {
     return new Promise((resolve, reject) => {
-        csvtojson()
+        csvtojson({ ignoreEmpty: true })
             .fromFile(path.join(csvFolder, file))
-            .then((data) => {
+            .then(async (data) => {
+                // await fs.promises.unlink(path.join(csvFolder, file));//delete the file after reading
                 resolve({ file, data });
             })
             .catch((err) => {
                 reject(err);
-            });
+        });
     })
 }
 
@@ -31,13 +32,19 @@ const trimQuery = (curr) => {
     delete curr.field1;
 
     delete curr.genders;
-    curr.gender = JSON.parse(curr.gender.replaceAll("'", '"'))// "[]" to []
-    curr.geographic_locations = JSON.parse(curr.geographic_locations.replaceAll("'", '"'))
+    // curr.gender = JSON.parse(curr.gender.replaceAll("'", '"'))// "[]" to []
+    // curr.geographic_locations = JSON.parse(curr.geographic_locations.replaceAll("'", '"'))
+
+    for (let prop in curr) {
+        if (curr.hasOwnProperty(prop)) {
+            curr[prop] = JSON.parse(curr[prop].replaceAll("'", '"'));
+        }
+    }
 
     return curr;
 }
 
-const readData = async (callback) => {
+const readData = async () => {
     const files = await listDir();
     const promises = [];
     const data = []
@@ -48,7 +55,7 @@ const readData = async (callback) => {
     }
     );
 
-    Promise.all(promises).then((jsons) => {//jsons from different files
+    return await Promise.all(promises).then((jsons) => {//jsons from different files
         jsons.forEach(JsonWithFile => {
             const json = JsonWithFile.data;
             const file = JsonWithFile.file;
@@ -66,16 +73,12 @@ const readData = async (callback) => {
                     prev.querys.push(sameQuery);
                 }
                 return prev;
-            }, { model: file, querys: [] });
+            }, { model: path.parse(file).name, querys: [] });
             data.push(querys);
         })
-        return;
-    }
-    ).then(() => {
-        callback(data);
+        return data;//list of models
     }
     )
-
     // return new Promise((resolve, reject) => {
     //     fs.readdir(csvFolder, (err, files) => {
     //         if (err) throw err;
@@ -113,7 +116,7 @@ const readData = async (callback) => {
     // )
 }
 
-readData((data) => console.log(data));
+// readData().then((data) => console.log(data));//this will DEL the csv files
 
 module.exports = { readData };
 
