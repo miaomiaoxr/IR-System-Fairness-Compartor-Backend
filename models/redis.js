@@ -15,19 +15,29 @@ const clientInit = () => {
 }
 
 const setOnefile = async (model, client) => {
-
     const modelName = model.model;
-    return await client.exists(modelName).then(async (exists) => {
+    return client.exists(modelName).then(async (exists) => {
         if (!exists) {
-            return await client.set(modelName, JSON.stringify(model));
+            await client.SADD('modelSet', modelName);
+            return client.set(modelName, JSON.stringify(model));//return a promise
         } else {
             throw new Error(`${modelName} already exists`);//catch in express
         }
     })
 }
 
+const readOneModel = async (modelName, client) => {
+    return client.get(modelName).then(data => JSON.parse(data));
+}
+
 const readDataFromRedis = async () => {
     const client = await clientInit();
+    const models = await client.SMEMBERS('modelSet');
+    if (models.length === 0) return [];
+
+    const promises = [];
+    models.forEach(model => promises.push(readOneModel(model, client)));
+
     const res = [];
     // return await client.get('mock_data', async (err, data) => {//READ mock_data ONLY
     //     console.log(JSON.parse(data));
@@ -36,13 +46,19 @@ const readDataFromRedis = async () => {
     //     res.push(JSON.parse(data));
     //     return res;
     // })
-    return await client.get('mock_data').then(async (data) => {//READ mock_data ONLY
-        console.log(JSON.parse(data));
-        await client.quit();
 
-        res.push(JSON.parse(data));
-        return res;
+    await Promise.all(promises).then(models => {
+        models.forEach(model => res.push(model));
     })
+    await client.quit();
+    // return client.get('mock_data').then(async (data) => {//READ mock_data ONLY
+    //     console.log(JSON.parse(data));
+    //     await client.quit();
+
+    //     res.push(JSON.parse(data));
+    //     return res;//return a promise
+    // })
+    return res;
 }
 
 //should export this one also
@@ -58,7 +74,7 @@ const addToRedis = async () => {
         promises.push(setOnefile(model, client));
     })
 
-    Promise.all(promises).then(async () => {
+    await Promise.all(promises).then(async () => {
         await client.quit();
         return;
     }
@@ -71,4 +87,18 @@ const addToRedis = async () => {
     // console.log(await client.quit());
 };
 
+const delAll = async () => {
+    const client = await clientInit();
+    const promises = [];
+    const keys = await client.keys('*')
+
+    keys.forEach(key => promises.push(client.del(key)))
+    await Promise.all(promises).then(async () => {
+        await client.quit();
+    })
+}
+
+
+// delAll()
+// addToRedis();
 module.exports = { readDataFromRedis };

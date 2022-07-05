@@ -12,7 +12,7 @@ async function listDir() { //list all files in the csv folder
     }
 }
 
-const processSinglefile = async (file) => {
+const processSingleFile = async (file) => {
     return new Promise((resolve, reject) => {
         csvtojson({ ignoreEmpty: true })
             .fromFile(path.join(csvFolder, file))
@@ -51,7 +51,7 @@ const readData = async () => {
 
     files.forEach(file => {
         // promises.push(csvtojson().fromFile(path.join(csvFolder, file)));
-        promises.push(processSinglefile(file));
+        promises.push(processSingleFile(file));
     }
     );
 
