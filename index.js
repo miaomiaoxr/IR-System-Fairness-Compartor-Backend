@@ -1,8 +1,26 @@
 const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
+const path = require('path');
 const { readData } = require('./models/async_data');
 const { readDataFromRedis } = require('./models/redis');
+const multer = require('multer');
+
+const storage = multer.diskStorage({
+  destination: path.join(__dirname,'csvs') ,
+  filename: function (req, file, cb) {
+    cb(
+      null,
+      // file.fieldname + path.extname(file.originalname)
+      file.originalname
+    );
+  },
+});
+
+const upload = multer({ 
+  storage: storage,
+  limits:{ fileSize: 10000000000 }
+});
 
 const app = express();
 app.use(express.json());
@@ -25,6 +43,10 @@ app.get('/api/models', (req, res) => {
   // })
   // readData().then(data=>res.json(data));
   readDataFromRedis().then(data => res.json(data));
+});
+
+app.post('/api/models',upload.single('model_file'), (req, res) => {
+  res.send();
 });
 
 app.use((error, req, res, next) => {

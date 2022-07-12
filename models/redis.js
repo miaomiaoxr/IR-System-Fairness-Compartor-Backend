@@ -80,11 +80,6 @@ const addToRedis = async () => {
     }
     );
 
-    // console.log(await client.ping())
-    // console.log(await client.set("name", "John"));
-    // console.log(await client.GET("name"));
-    // console.log(await client.del("name"));
-    // console.log(await client.quit());
 };
 
 const delAll = async () => {
