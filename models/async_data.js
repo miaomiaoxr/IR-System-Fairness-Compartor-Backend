@@ -1,6 +1,7 @@
 const csvtojson = require('csvtojson');
 const fs = require('fs');
 const path = require('path');
+const { addOneModelDataToRedis } = require('./redis');
 
 const csvFolder = path.join(__dirname, '..', 'csvs');
 
@@ -12,7 +13,7 @@ async function listDir() { //list all files in the csv folder
     }
 }
 
-const processSingleFile = async (file) => {
+const readCSVFile = async (file) => {
     return new Promise((resolve, reject) => {
         csvtojson({ ignoreEmpty: true })
             .fromFile(path.join(csvFolder, file))
@@ -22,7 +23,7 @@ const processSingleFile = async (file) => {
             })
             .catch((err) => {
                 reject(err);
-        });
+            });
     })
 }
 
@@ -44,6 +45,27 @@ const trimQuery = (curr) => {
     return curr;
 }
 
+const fileDataToJson = JsonWithFile => {
+    const json = JsonWithFile.data;
+    const file = JsonWithFile.file;
+    const querys = json.reduce((prev, curr) => {
+        const qid = curr.qid;
+        const query = curr.query;
+
+        curr = trimQuery(curr);//remove unused fields
+
+        let sameQuery = prev.querys.find(query => query.qid === qid);
+        if (sameQuery !== undefined) {//has same query
+            sameQuery.data.push(curr);
+        } else {
+            sameQuery = { qid: qid, query: query, data: [curr] }//no such query, so create a new one
+            prev.querys.push(sameQuery);
+        }
+        return prev;
+    }, { model: path.parse(file).name, querys: [] });
+    return querys;
+}
+
 const readData = async () => {
     const files = await listDir();
     const promises = [];
@@ -51,29 +73,30 @@ const readData = async () => {
 
     files.forEach(file => {
         // promises.push(csvtojson().fromFile(path.join(csvFolder, file)));
-        promises.push(processSingleFile(file));
+        promises.push(readCSVFile(file));
     }
     );
 
     return await Promise.all(promises).then((jsons) => {//jsons from different files
         jsons.forEach(JsonWithFile => {
-            const json = JsonWithFile.data;
-            const file = JsonWithFile.file;
-            const querys = json.reduce((prev, curr) => {
-                const qid = curr.qid;
-                const query = curr.query;
+            // const json = JsonWithFile.data;
+            // const file = JsonWithFile.file;
+            // const querys = json.reduce((prev, curr) => {
+            //     const qid = curr.qid;
+            //     const query = curr.query;
 
-                curr = trimQuery(curr);//remove unused fields
+            //     curr = trimQuery(curr);//remove unused fields
 
-                let sameQuery = prev.querys.find(query => query.qid === qid);
-                if (sameQuery !== undefined) {//has same query
-                    sameQuery.data.push(curr);
-                } else {
-                    sameQuery = { qid: qid, query: query, data: [curr] }//no such query, so create a new one
-                    prev.querys.push(sameQuery);
-                }
-                return prev;
-            }, { model: path.parse(file).name, querys: [] });
+            //     let sameQuery = prev.querys.find(query => query.qid === qid);
+            //     if (sameQuery !== undefined) {//has same query
+            //         sameQuery.data.push(curr);
+            //     } else {
+            //         sameQuery = { qid: qid, query: query, data: [curr] }//no such query, so create a new one
+            //         prev.querys.push(sameQuery);
+            //     }
+            //     return prev;
+            // }, { model: path.parse(file).name, querys: [] });
+            const querys = fileDataToJson(JsonWithFile);
             data.push(querys);
         })
         return data;//list of models
@@ -116,8 +139,18 @@ const readData = async () => {
     // )
 }
 
+const processFile = async (file) => {
+    return readCSVFile(file).then((jsonWithFile) => {
+        return fileDataToJson(jsonWithFile);
+    }
+    ).then(json => {
+        addOneModelDataToRedis(json);
+        return json;
+    })
+}
+
 // readData().then((data) => console.log(data));//this will DEL the csv files
 
-module.exports = { readData };
+module.exports = { processFile,readData };
 
 //https://stackoverflow.com/questions/65434008/wait-for-the-for-loop-to-complete-and-then-return-the-value

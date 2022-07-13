@@ -61,7 +61,15 @@ const readDataFromRedis = async () => {
     return res;
 }
 
-//should export this one also
+const addOneModelDataToRedis = async (model) => {
+    const client = await clientInit();
+    await setOnefile(model, client).then(async () => {
+        await client.quit();
+    }
+    );
+}
+
+//only for test
 const addToRedis = async () => {
     const client = await clientInit();
 
@@ -96,4 +104,4 @@ const delAll = async () => {
 
 // delAll()
 // addToRedis();
-module.exports = { readDataFromRedis };
+module.exports = { readDataFromRedis,addOneModelDataToRedis };
