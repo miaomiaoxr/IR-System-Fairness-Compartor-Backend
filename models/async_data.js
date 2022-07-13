@@ -1,9 +1,10 @@
 const csvtojson = require('csvtojson');
 const fs = require('fs');
 const path = require('path');
-const { addOneModelDataToRedis } = require('./redis');
+const { addOneModelDataToRedis, addEval, getEval } = require('./redis');
 
 const csvFolder = path.join(__dirname, '..', 'csvs');
+const evalFolder = path.join(__dirname, '..', 'eval');
 
 async function listDir() { //list all files in the csv folder
     try {
@@ -149,8 +150,18 @@ const processFile = async (file) => {
     })
 }
 
+const processEval = async (file) => {
+    const data = await fs.promises.readFile(path.join(evalFolder, file), 'utf8');
+    addEval(JSON.parse(data));
+}
+
+const getEvalFromRedis = async () => {
+    const data = await getEval();
+    return data;
+}
+
 // readData().then((data) => console.log(data));//this will DEL the csv files
 
-module.exports = { processFile,readData };
+module.exports = { processFile, readData, processEval, getEvalFromRedis };
 
 //https://stackoverflow.com/questions/65434008/wait-for-the-for-loop-to-complete-and-then-return-the-value

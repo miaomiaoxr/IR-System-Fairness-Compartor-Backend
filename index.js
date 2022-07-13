@@ -2,11 +2,11 @@ const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
 const path = require('path');
-const { processFile } = require('./models/async_data');
+const { processFile,processEval,getEvalFromRedis } = require('./models/async_data');
 const { readDataFromRedis } = require('./models/redis');
 const multer = require('multer');
 
-const storage = multer.diskStorage({
+const CSVstorage = multer.diskStorage({
   destination: path.join(__dirname, 'csvs'),
   filename: function (req, file, cb) {
     cb(
@@ -16,8 +16,23 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({
-  storage: storage,
+const evalStorage = multer.diskStorage({
+  destination: path.join(__dirname, 'eval'),
+  filename: function (req, file, cb) {
+    cb(
+      null,
+      file.originalname
+    );
+  },
+});
+
+const CSVupload = multer({
+  storage: CSVstorage,
+  limits: { fileSize: 10000000000 }
+});
+
+const evalUpload = multer({
+  storage: evalStorage,
   limits: { fileSize: 10000000000 }
 });
 
@@ -44,10 +59,21 @@ app.get('/api/models', (req, res) => {
   readDataFromRedis().then(data => res.json(data));
 });
 
-app.post('/api/models', upload.single('model_file'), (req, res) => {
+app.get('/api/eval', (req, res) => {
+  getEvalFromRedis().then(data => res.json(data));
+})
+
+app.post('/api/models', CSVupload.single('model_file'), (req, res) => {
   processFile(req.file.filename).then(json => {
     res.json(json)
   });//sure works
+});
+
+app.post('/api/eval', evalUpload.single('eval_file'), (req, res) => {
+  processEval(req.file.filename).then(json => {
+    res.json(json)
+  }
+  );
 });
 
 app.use((error, req, res, next) => {
