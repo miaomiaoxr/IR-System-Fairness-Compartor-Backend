@@ -15,28 +15,32 @@ const clientInit = () => {
 }
 
 const setOnefile = async (model, client) => {
-    const modelName = model.model;
-    return client.exists(modelName).then(async (exists) => {
-        if (!exists) {
-            await client.SADD('modelSet', modelName);
-            return client.set(modelName, JSON.stringify(model));//return a promise
-        } else {
-            throw new Error(`${modelName} already exists`);//catch in express
-        }
-    })
+    const id = model.id;
+    await client.SADD('modelSet', id);
+    return client.set(id, JSON.stringify(model));
+
+
+    // return client.exists(modelName).then(async (exists) => {
+    //     if (!exists) {
+    //         await client.SADD('modelSet', modelName);
+    //         return client.set(modelName, JSON.stringify(model));//return a promise
+    //     } else {
+    //         throw new Error(`${modelName} already exists`);//catch in express
+    //     }
+    // })
 }
 
-const readOneModel = async (modelName, client) => {
-    return client.get(modelName).then(data => JSON.parse(data));
+const readOneModel = async (modelID, client) => {
+    return client.get(modelID).then(data => JSON.parse(data));
 }
 
 const readDataFromRedis = async () => {
     const client = await clientInit();
-    const models = await client.SMEMBERS('modelSet');
-    if (models.length === 0) return [];
+    const modelIDs = await client.SMEMBERS('modelSet');
+    if (modelIDs.length === 0) return [];
 
     const promises = [];
-    models.forEach(model => promises.push(readOneModel(model, client)));
+    modelIDs.forEach(modelID => promises.push(readOneModel(modelID, client)));
 
     const res = [];
     // return await client.get('mock_data', async (err, data) => {//READ mock_data ONLY
@@ -90,7 +94,7 @@ const addToRedis = async () => {
 
 };
 
-const addEval =async (jsons) =>{
+const addEval = async (jsons) => {
     const client = await clientInit();
     client.set('eval', JSON.stringify(jsons));
     client.quit();
@@ -116,4 +120,4 @@ const getEval = async () => {
 
 // delAll()
 // addToRedis();
-module.exports = { readDataFromRedis,addOneModelDataToRedis,addEval,getEval };
+module.exports = { readDataFromRedis, addOneModelDataToRedis, addEval, getEval };
