@@ -96,7 +96,7 @@ const addToRedis = async () => {
 
 const addEval = async (jsons) => {
     const client = await clientInit();
-    client.set('eval', JSON.stringify(jsons));
+    await client.set('eval', JSON.stringify(jsons));
     client.quit();
 }
 
@@ -118,6 +118,13 @@ const getEval = async () => {
     return JSON.parse(data);
 }
 
+const deleteOneModel = async (modelID) => {
+    const client = await clientInit();
+    await client.SREM('modelSet', modelID);
+    await client.del(modelID);
+    await client.quit();
+}
+
 // delAll()
 // addToRedis();
-module.exports = { readDataFromRedis, addOneModelDataToRedis, addEval, getEval };
+module.exports = { readDataFromRedis, addOneModelDataToRedis, addEval, getEval,deleteOneModel };

@@ -40,7 +40,7 @@ const trimQuery = (curr) => {
 
     for (let prop in curr) {
         if (curr.hasOwnProperty(prop)) {
-            curr[prop] = JSON.parse(curr[prop].replaceAll("'", '"'));
+            curr[prop] = JSON.parse(curr[prop].replaceAll("'", '"'));//If there is no table header, it will crash on this line
         }
     }
 
