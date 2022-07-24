@@ -3,7 +3,7 @@ const morgan = require('morgan');
 const cors = require('cors');
 const path = require('path');
 const { processFile,processEval,getEvalFromRedis } = require('./models/async_data');
-const { readDataFromRedis,deleteOneModel } = require('./models/redis');
+const { readDataFromRedis,deleteOneModel,renameOneModel } = require('./models/redis');
 const multer = require('multer');
 
 const CSVstorage = multer.diskStorage({
@@ -82,6 +82,14 @@ app.delete('/api/models/:id', (req, res) => {
   deleteOneModel(id).then(() => {
     res.json();
   });
+});
+
+app.put('/api/models/:id', (req, res) => {
+  const { id } = req.params;
+  const newName = req.body.newName;
+  renameOneModel(id, newName).then(() => {
+    res.json();
+  })
 });
 
 app.use((error, req, res, next) => {

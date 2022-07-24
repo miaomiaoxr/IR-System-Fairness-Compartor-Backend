@@ -4,7 +4,7 @@ const { readData } = require('./async_data.js');
 const clientInit = () => {
     return new Promise(async (resolve, reject) => {
         const client = redis.createClient({
-            socket: { host: '192.168.37.128' }
+            socket: { host: '192.168.37.128' }//JUST ON MY COMPUTER
         });
 
         client.on('error', (err) => console.log('Redis Client Error', err));
@@ -125,6 +125,17 @@ const deleteOneModel = async (modelID) => {
     await client.quit();
 }
 
+const renameOneModel = async (modelID,newName) => {
+    const client = await clientInit();
+    
+    const data = JSON.parse((await client.get(modelID)));
+    console.log(newName)
+    data.modelName = newName;
+    await client.set(modelID,JSON.stringify(data));
+
+    await client.quit();
+}
+
 // delAll()
 // addToRedis();
-module.exports = { readDataFromRedis, addOneModelDataToRedis, addEval, getEval,deleteOneModel };
+module.exports = { readDataFromRedis, addOneModelDataToRedis, addEval, getEval,deleteOneModel,renameOneModel };
