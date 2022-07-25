@@ -2,7 +2,7 @@ const csvtojson = require('csvtojson');
 const fs = require('fs');
 const path = require('path');
 const { addOneModelDataToRedis, addEval, getEval } = require('./redis');
-const { v4: uuidv4 } = require('uuid');
+
 
 const csvFolder = path.join(__dirname, '..', 'csvs');
 const evalFolder = path.join(__dirname, '..', 'eval');
@@ -66,7 +66,6 @@ const fileDataToJson = JsonWithFile => {
         return prev;
     }, {
         modelName: path.parse(file).name,
-        id: uuidv4(),
         querys: [],
     });
     return querys;

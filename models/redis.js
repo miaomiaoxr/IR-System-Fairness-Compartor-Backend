@@ -1,4 +1,5 @@
 const redis = require('redis');
+const { v4: uuidv4 } = require('uuid');
 
 const clientInit = () => {
     return new Promise(async (resolve, reject) => {
@@ -14,14 +15,25 @@ const clientInit = () => {
 }
 
 const setOnefile = async (model, client) => {
-    const id = model.id;
+    const id = uuidv4();
+    model.id = id;
+
+    console.log(model);
+
+    const dataID = id + '_data';
+    await client.set(dataID, JSON.stringify(model.querys));
+
+    model.querys = dataID;
     await client.SADD('modelSet', id);
     return client.set(id, JSON.stringify(model));
 
 }
 
 const readOneModel = async (modelID, client) => {
-    return client.get(modelID).then(data => JSON.parse(data));
+    const data = JSON.parse((await client.get(modelID)));
+    data.querys = JSON.parse((await client.get(data.querys)));
+
+    return data;
 }
 
 const readDataFromRedis = async () => {
@@ -33,13 +45,13 @@ const readDataFromRedis = async () => {
     modelIDs.forEach(modelID => promises.push(readOneModel(modelID, client)));
 
     const res = [];
-    
+
 
     await Promise.all(promises).then(models => {
         models.forEach(model => res.push(model));
     })
     await client.quit();
-    
+
     return res;
 }
 
@@ -77,22 +89,23 @@ const getEval = async () => {
 
 const deleteOneModel = async (modelID) => {
     const client = await clientInit();
+    const data = JSON.parse((await client.get(modelID)));
+    await client.del(data.querys);
     await client.SREM('modelSet', modelID);
     await client.del(modelID);
     await client.quit();
 }
 
-const renameOneModel = async (modelID,newName) => {
+const renameOneModel = async (modelID, newName) => {
     const client = await clientInit();
-    
+
     const data = JSON.parse((await client.get(modelID)));
-    console.log(newName)
     data.modelName = newName;
-    await client.set(modelID,JSON.stringify(data));
+    await client.set(modelID, JSON.stringify(data));
 
     await client.quit();
 }
 
 // delAll()
 // addToRedis();
-module.exports = { readDataFromRedis, addOneModelDataToRedis, addEval, getEval,deleteOneModel,renameOneModel };
+module.exports = { readDataFromRedis, addOneModelDataToRedis, addEval, getEval, deleteOneModel, renameOneModel };
