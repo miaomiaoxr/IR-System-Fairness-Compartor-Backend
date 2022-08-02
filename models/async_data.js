@@ -89,16 +89,15 @@ const readData = async () => {
         return data;//list of models
     }
     )
-    
+
 }
 
 const processFile = async (file) => {
     return readCSVFile(file).then((jsonWithFile) => {
         return fileDataToJson(jsonWithFile);
     }
-    ).then(json => {
-        addOneModelDataToRedis(json);
-        return json;
+    ).then((json) => {
+        return addOneModelDataToRedis(json);
     })
 }
 

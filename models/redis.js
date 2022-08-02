@@ -18,15 +18,15 @@ const setOnefile = async (model, client) => {
     const id = uuidv4();
     model.id = id;
 
-    console.log(model);
-
     const dataID = id + '_data';
     await client.set(dataID, JSON.stringify(model.querys));
 
-    model.querys = dataID;
+    let wroteModel = {...model};
+    wroteModel.querys = dataID;
     await client.SADD('modelSet', id);
-    return client.set(id, JSON.stringify(model));
-
+    await client.set(id, JSON.stringify(wroteModel));
+   
+    return model;
 }
 
 const readOneModel = async (modelID, client) => {
@@ -57,8 +57,9 @@ const readDataFromRedis = async () => {
 
 const addOneModelDataToRedis = async (model) => {
     const client = await clientInit();
-    await setOnefile(model, client).then(async () => {
+    return setOnefile(model, client).then(async (data) => {
         await client.quit();
+        return data;
     }
     );
 }
