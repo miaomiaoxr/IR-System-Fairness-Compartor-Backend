@@ -103,15 +103,11 @@ const processFile = async (file) => {
 
 const processEval = async (file) => {
     const data = await fs.promises.readFile(path.join(evalFolder, file), 'utf8');
-    addEval(JSON.parse(data));
+    return addEval(JSON.parse(data));
 }
 
-const getEvalFromRedis = async () => {
-    const data = await getEval();
-    return data;
-}
 
 // readData().then((data) => console.log(data));//this will DEL the csv files
 
-module.exports = { processFile, readData, processEval, getEvalFromRedis };
+module.exports = { processFile, readData, processEval };
 

@@ -2,8 +2,8 @@ const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
 const path = require('path');
-const { processFile,processEval,getEvalFromRedis } = require('./models/async_data');
-const { readDataFromRedis,deleteOneModel,renameOneModel } = require('./models/redis');
+const { processFile, processEval } = require('./models/async_data');
+const { readDataFromRedis, deleteOneModel, renameOneModel } = require('./models/redis');
 const multer = require('multer');
 
 const CSVstorage = multer.diskStorage({
@@ -55,9 +55,6 @@ app.get('/api/models', (req, res) => {
   readDataFromRedis().then(data => res.json(data));
 });
 
-app.get('/api/eval', (req, res) => {
-  getEvalFromRedis().then(data => res.json(data));
-})
 
 app.post('/api/models', CSVupload.single('model_file'), (req, res) => {
   processFile(req.file.filename).then(json => {
@@ -66,8 +63,8 @@ app.post('/api/models', CSVupload.single('model_file'), (req, res) => {
 });
 
 app.post('/api/eval', evalUpload.single('eval_file'), (req, res) => {
-  processEval(req.file.filename).then(json => {
-    res.json(json)
+  processEval(req.file.filename).then(() => {
+    res.json({ message: 'eval file uploaded' })
   }
   );
 });

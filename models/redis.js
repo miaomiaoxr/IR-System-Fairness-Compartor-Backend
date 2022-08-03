@@ -21,11 +21,11 @@ const setOnefile = async (model, client) => {
     const dataID = id + '_data';
     await client.set(dataID, JSON.stringify(model.querys));
 
-    let wroteModel = {...model};
+    let wroteModel = { ...model };
     wroteModel.querys = dataID;
     await client.SADD('modelSet', id);
     await client.set(id, JSON.stringify(wroteModel));
-   
+
     return model;
 }
 
@@ -66,8 +66,18 @@ const addOneModelDataToRedis = async (model) => {
 
 const addEval = async (jsons) => {
     const client = await clientInit();
-    await client.set('eval', JSON.stringify(jsons));
-    client.quit();
+
+    const promises = [];
+    jsons.forEach(json => {
+        promises.push(addOneEval(json, client));
+    })
+
+    return Promise.all(promises).then(() => client.quit())
+}
+
+const addOneEval = async (json, client) => {
+    await client.set(json.id + 'eval', JSON.stringify(json));
+    return client.SADD('evalSet', json.id + 'eval')
 }
 
 const delAll = async () => {
