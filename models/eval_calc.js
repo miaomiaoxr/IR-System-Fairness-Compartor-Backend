@@ -15,7 +15,6 @@ const genEvalForOneModel = (querys, evals) => {
         return prev;
     }, {});
 
-    console.log(evalsForOne);
     return evalsForOne;
 }
 

@@ -139,7 +139,7 @@ const setOneModelEval = async (modelID, evalSet, client) => {
     const evals = genEvalForOneModel(querys, evalList);
 
     model.evals = evals;
-    return client.set(modelID, JSON.stringify(model)).then(() => {model.querys=querys; return model});
+    return client.set(modelID, JSON.stringify(model)).then(() => { model.querys = querys; return model });
 }
 
 const setAllModelsEval = async () => { //every time upload a eval file, call this function
@@ -152,7 +152,10 @@ const setAllModelsEval = async () => { //every time upload a eval file, call thi
         promises.push(setOneModelEval(modelID, evalSet, client));
     })
 
-    return Promise.all(promises).then(() => client.quit())
+    return Promise.all(promises).then(async (models) => {
+        await client.quit();
+        return models.map(model => { return { id: model.id, evals: model.evals } });
+    })
 }
 
 

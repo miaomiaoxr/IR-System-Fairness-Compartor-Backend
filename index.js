@@ -63,8 +63,8 @@ app.post('/api/models', CSVupload.single('model_file'), (req, res) => {
 });
 
 app.post('/api/eval', evalUpload.single('eval_file'), (req, res) => {
-  processEval(req.file.filename).then(() => {
-    res.json({ message: 'eval file uploaded' })
+  processEval(req.file.filename).then((modelsWithEval) => {
+    res.json(modelsWithEval)
   }
   );
 });
