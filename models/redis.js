@@ -27,7 +27,11 @@ const setOnefile = async (model, client) => {
     await client.SADD('modelSet', id);
     await client.set(id, JSON.stringify(wroteModel));
 
-    return model;
+    const evalSet = await client.SMEMBERS('evalSet');
+    if (!evalSet)
+        return model;
+    else
+        return setOneModelEval(id, evalSet, client);
 }
 
 const readOneModel = async (modelID, client) => {
@@ -118,7 +122,7 @@ const renameOneModel = async (modelID, newName) => {
     await client.quit();
 }
 
-const getEvalInNeed = async (evalInNeed,client) => {
+const getEvalInNeed = async (evalInNeed, client) => {
     const promises = evalInNeed.map(async (evalID) => JSON.parse(await client.get(evalID)));
     return Promise.all(promises);
 }
@@ -130,12 +134,12 @@ const setOneModelEval = async (modelID, evalSet, client) => {
     const qids = querys.map(query => query.qid);
     const evalInNeed = evalSet.filter(evalID => qids.includes(evalID.split('eval')[0]));
 
-    const evalList = await getEvalInNeed(evalInNeed,client);
+    const evalList = await getEvalInNeed(evalInNeed, client);
 
     const evals = genEvalForOneModel(querys, evalList);
 
     model.evals = evals;
-    return client.set(modelID, JSON.stringify(model));
+    return client.set(modelID, JSON.stringify(model)).then(() => {model.querys=querys; return model});
 }
 
 const setAllModelsEval = async () => { //every time upload a eval file, call this function
