@@ -1,5 +1,6 @@
 const redis = require('redis');
 const { v4: uuidv4 } = require('uuid');
+const { genEvalForOneModel } = require('./eval_calc');
 
 const clientInit = () => {
     return new Promise(async (resolve, reject) => {
@@ -117,6 +118,41 @@ const renameOneModel = async (modelID, newName) => {
     await client.quit();
 }
 
+const getEvalInNeed = async (evalInNeed,client) => {
+    const promises = evalInNeed.map(async (evalID) => JSON.parse(await client.get(evalID)));
+    return Promise.all(promises);
+}
+
+const setOneModelEval = async (modelID, evalSet, client) => {
+    const model = JSON.parse((await client.get(modelID)));
+    const querys = JSON.parse((await client.get(model.querys)));
+
+    const qids = querys.map(query => query.qid);
+    const evalInNeed = evalSet.filter(evalID => qids.includes(evalID.split('eval')[0]));
+
+    const evalList = await getEvalInNeed(evalInNeed,client);
+
+    const evals = genEvalForOneModel(querys, evalList);
+
+    model.evals = evals;
+    return client.set(modelID, JSON.stringify(model));
+}
+
+const setAllModelsEval = async () => { //every time upload a eval file, call this function
+    const client = await clientInit();
+    const modelSet = await client.SMEMBERS('modelSet');
+    const evalSet = await client.SMEMBERS('evalSet');
+
+    const promises = [];
+    modelSet.forEach(modelID => {
+        promises.push(setOneModelEval(modelID, evalSet, client));
+    })
+
+    return Promise.all(promises).then(() => client.quit())
+}
+
+
+
 // delAll()
 // addToRedis();
-module.exports = { readDataFromRedis, addOneModelDataToRedis, addEval, getEval, deleteOneModel, renameOneModel };
+module.exports = { readDataFromRedis, addOneModelDataToRedis, addEval, getEval, deleteOneModel, renameOneModel, setAllModelsEval };

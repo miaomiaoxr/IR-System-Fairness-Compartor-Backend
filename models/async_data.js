@@ -1,7 +1,7 @@
 const csvtojson = require('csvtojson');
 const fs = require('fs');
 const path = require('path');
-const { addOneModelDataToRedis, addEval, getEval } = require('./redis');
+const { addOneModelDataToRedis, addEval, setAllModelsEval } = require('./redis');
 
 
 const csvFolder = path.join(__dirname, '..', 'csvs');
@@ -103,7 +103,7 @@ const processFile = async (file) => {
 
 const processEval = async (file) => {
     const data = await fs.promises.readFile(path.join(evalFolder, file), 'utf8');
-    return addEval(JSON.parse(data));
+    return addEval(JSON.parse(data)).then(() => setAllModelsEval())
 }
 
 
