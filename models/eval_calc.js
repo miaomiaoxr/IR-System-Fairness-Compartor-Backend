@@ -5,7 +5,8 @@ const genEvalForOneModel = (querys, evals) => {
     const evalsForOne = querys.reduce((prev, curr) => {
         const qid = curr.qid;
 
-        const queryDocIDs = curr.data.map(doc => doc.docid);//change here if you want use docno instead of docid
+        // const queryDocIDs = curr.data.map(doc => doc.docid);//change here if you want use docno instead of docid
+        const queryDocIDs = curr.data.map(doc => doc.docno);//change here if you want use docno instead of docid
         const evalData = evals.find(e => e.id == qid);
 
         if (evalData !== undefined) {
@@ -29,7 +30,7 @@ const precisionAndRecallAndF1 = (queryDocIDs, evalDocIDs) => {
     }
     precision = correct / queryDocIDs.length;
     recall = correct / evalDocIDs.length;
-    const harmonicMeanValue = precision > 0 && recall > 0 ? harmonicMean([precision, recall]): -1;
+    const harmonicMeanValue = precision > 0 && recall > 0 ? harmonicMean([precision, recall]).toFixed(5): -1;
     return {
         precision,
         recall,
