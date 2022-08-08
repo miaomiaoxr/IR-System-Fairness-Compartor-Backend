@@ -4,9 +4,10 @@ const { genEvalForOneModel } = require('./eval_calc');
 
 const clientInit = () => {
     return new Promise(async (resolve, reject) => {
-        const client = redis.createClient({
-            socket: { host: '192.168.37.128' }//JUST ON MY COMPUTER
-        });
+        // const client = redis.createClient({
+        //     socket: { host: '192.168.37.128' }//JUST ON MY COMPUTER
+        // });
+        const client = redis.createClient();//WSL version
 
         client.on('error', (err) => console.log('Redis Client Error', err));
 
