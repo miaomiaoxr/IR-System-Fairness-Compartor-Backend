@@ -53,12 +53,12 @@ const readDataFromRedis = async () => {
     const res = [];
 
 
-    await Promise.all(promises).then(models => {
+    return Promise.all(promises).then(models => {
         models.forEach(model => res.push(model));
-    })
-    await client.quit();
+    }).then(() => client.quit()).then(() => res);
+    // await client.quit();
 
-    return res;
+    // return res;
 }
 
 const addOneModelDataToRedis = async (model) => {
@@ -159,8 +159,22 @@ const setAllModelsEval = async () => { //every time upload a eval file, call thi
     })
 }
 
+const qidWithDocNos = async (data) => {//all data in redis, maybe we need a specific model version
+    return readDataFromRedis().then(data => {
+        const ret = [];
+        data.forEach(model => {
+            model.querys.forEach(query => {
+                query.data.forEach(doc => {
+                    ret.push({ topic_id: query.qid, page_id: ''+doc.docno });
+                })
+            })
+        })
+        return ret;
+    })
+}
+
 
 
 // delAll()
 // addToRedis();
-module.exports = { readDataFromRedis, addOneModelDataToRedis, addEval, getEval, deleteOneModel, renameOneModel, setAllModelsEval };
+module.exports = { readDataFromRedis, addOneModelDataToRedis, addEval, getEval, deleteOneModel, renameOneModel, setAllModelsEval, qidWithDocNos };
