@@ -5,7 +5,6 @@ const path = require('path');
 const { processFile, processEval } = require('./models/async_data');
 const { readDataFromRedis, deleteOneModel, renameOneModel } = require('./models/redis');
 const multer = require('multer');
-const {callD_alembert} = require('./models/call_py');
 
 const CSVstorage = multer.diskStorage({
   destination: path.join(__dirname, 'csvs'),
@@ -85,7 +84,7 @@ app.put('/api/models/:id', (req, res) => {
   })
 });
 
-app.get('/api/py', callD_alembert);
+// app.get('/api/py', callD_alembert);
 
 
 app.use((error, req, res, next) => {
