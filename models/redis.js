@@ -1,6 +1,7 @@
 const redis = require('redis');
 const { v4: uuidv4 } = require('uuid');
 const { genEvalForOneModel } = require('./eval_calc');
+const { calcOneModel: calcOneModelPy } = require('./call_py');
 
 const clientInit = () => {
     return new Promise(async (resolve, reject) => {
@@ -27,6 +28,8 @@ const setOnefile = async (model, client) => {
     wroteModel.querys = dataID;
     await client.SADD('modelSet', id);
     await client.set(id, JSON.stringify(wroteModel));
+
+    model.pyEval = await setOneModelPyEvals(id, client);
 
     const evalSet = await client.SMEMBERS('evalSet');
     if (!evalSet)
@@ -165,7 +168,7 @@ const qidWithDocNos = async (data) => {//all data in redis, maybe we need a spec
         data.forEach(model => {
             model.querys.forEach(query => {
                 query.data.forEach(doc => {
-                    ret.push({ topic_id: query.qid, page_id: ''+doc.docno });
+                    ret.push({ topic_id: query.qid, page_id: '' + doc.docno });
                 })
             })
         })
@@ -173,7 +176,23 @@ const qidWithDocNos = async (data) => {//all data in redis, maybe we need a spec
     })
 }
 
+const setOneModelPyEvals = async (modelID, client) => {
+    const model = JSON.parse((await client.get(modelID)));
+    const querys = JSON.parse((await client.get(model.querys)));
 
+    const toPy = [];
+    querys.forEach(query => {
+        query.data.forEach(doc => {
+            toPy.push({ topic_id: query.qid, page_id: '' + doc.docno });
+        })
+    })
+
+
+    return calcOneModelPy(toPy).then(data => {
+        model.pyEval = data;
+        return client.set(modelID, JSON.stringify(model)).then(() => data);
+    })
+}
 
 // delAll()
 // addToRedis();
