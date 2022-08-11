@@ -183,12 +183,14 @@ const setOneModelPyEvals = async (modelID, client) => {
     const toPy = [];
     querys.forEach(query => {
         query.data.forEach(doc => {
-            toPy.push({ topic_id: query.qid, page_id: '' + doc.docno });
+            toPy.push({ topic_id: '101', page_id: '' + doc.docno });//Python eval script need topic_id to be a number
         })
     })
 
 
     return calcOneModelPy(toPy).then(data => {
+        for(let k in data) 
+            data[k] = data[k]['101'];//remove useless topic_id
         model.pyEval = data;
         return client.set(modelID, JSON.stringify(model)).then(() => data);
     })
