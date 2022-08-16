@@ -16,6 +16,7 @@ const options = {
 }
 
 const pyPath = path.join(__dirname, '..', '..', 'trec2021-fair-public', 'Task1Evaluation.py')//(relative) path to python script you want to call
+const pyPath2 = path.join(__dirname, '..', '..', 'trec2021-fair-public', 'Task2Evaluation.py')//(relative) path to python script you want to call
 
 // function callD_alembert(req, res) {
 
@@ -56,10 +57,12 @@ const pyPath = path.join(__dirname, '..', '..', 'trec2021-fair-public', 'Task1Ev
 //     // });
 // }
 
-function calcOneModel(queryDocNOs) {
+function calcOneModel(queryDocNOs, ver) {
     return new Promise((resolve, reject) => {
-
         let pyshell = new PythonShell(pyPath, options);
+
+        if (ver === 2)
+            pyshell = new PythonShell(pyPath2, options);
 
         pyshell.send(queryDocNOs);
 

@@ -3,7 +3,7 @@ const morgan = require('morgan');
 const cors = require('cors');
 const path = require('path');
 const { processFile, processEval } = require('./models/async_data');
-const { readDataFromRedis, deleteOneModel, renameOneModel } = require('./models/redis');
+const { readDataFromRedis, deleteOneModel, renameOneModel} = require('./models/redis');
 const multer = require('multer');
 
 const CSVstorage = multer.diskStorage({
@@ -84,7 +84,6 @@ app.put('/api/models/:id', (req, res) => {
   })
 });
 
-// app.get('/api/py', callD_alembert);
 
 
 app.use((error, req, res, next) => {

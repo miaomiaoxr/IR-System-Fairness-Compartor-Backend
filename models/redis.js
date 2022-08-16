@@ -2,6 +2,7 @@ const redis = require('redis');
 const { v4: uuidv4 } = require('uuid');
 const { genEvalForOneModel } = require('./eval_calc');
 const { calcOneModel: calcOneModelPy } = require('./call_py');
+const e = require('cors');
 
 const clientInit = () => {
     return new Promise(async (resolve, reject) => {
@@ -179,17 +180,21 @@ const qidWithDocNos = async (data) => {//all data in redis, maybe we need a spec
 const setOneModelPyEvals = async (modelID, client) => {
     const model = JSON.parse((await client.get(modelID)));
     const querys = JSON.parse((await client.get(model.querys)));
+    let ver = 1;
+    if(model.ver === 'task2') ver = 2; 
 
     const toPy = [];
     querys.forEach(query => {
         query.data.forEach(doc => {
-            toPy.push({ topic_id: '101', page_id: '' + doc.docno });//Python eval script need topic_id to be a number
+            if (!doc.seq_id)
+                toPy.push({ topic_id: '101', page_id: '' + doc.docno });//Python eval script need topic_id to be a number
+            else
+                toPy.push({ topic_id: '101',  seq_no: doc.seq_id, page_id: '' + doc.docno });
         })
     })
 
-
-    return calcOneModelPy(toPy).then(data => {
-        for(let k in data) 
+    return calcOneModelPy(toPy,ver).then(data => {
+        for (let k in data)
             data[k] = data[k]['101'];//remove useless topic_id
         model.pyEval = data;
         return client.set(modelID, JSON.stringify(model)).then(() => data);
@@ -198,4 +203,4 @@ const setOneModelPyEvals = async (modelID, client) => {
 
 // delAll()
 // addToRedis();
-module.exports = { readDataFromRedis, addOneModelDataToRedis, addEval, getEval, deleteOneModel, renameOneModel, setAllModelsEval, qidWithDocNos };
+module.exports = { readDataFromRedis, addOneModelDataToRedis, addEval, getEval, deleteOneModel, renameOneModel, setAllModelsEval, qidWithDocNos, setOneModelPyEvals };

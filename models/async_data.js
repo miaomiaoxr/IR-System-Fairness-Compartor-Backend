@@ -67,7 +67,16 @@ const fileDataToJson = JsonWithFile => {
     }, {
         modelName: path.parse(file).name,
         querys: [],
+        ver: json[0]['seq_id'] ? 'task2' : 'task1'
     });
+
+    if (querys.ver === 'task2')
+        querys.querys.map(query => query.seq_ids = query.data.reduce((prev, curr) => {
+            if (!prev.includes(curr.seq_id))
+                prev.push(curr.seq_id);
+            return prev;
+        }, []))
+
     return querys;
 }
 
