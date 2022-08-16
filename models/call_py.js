@@ -66,8 +66,8 @@ function calcOneModel(queryDocNOs, ver) {
 
         pyshell.send(queryDocNOs);
 
-        pyshell.on('message', function (message) {
-            resolve(message);
+        pyshell.on('message', function (data) {
+            resolve(data);
         })
 
         pyshell.end(function (err, code, signal) {

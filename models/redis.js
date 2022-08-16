@@ -28,8 +28,8 @@ const setOnefile = async (model, client) => {
     let wroteModel = { ...model };
     wroteModel.querys = dataID;
     await client.SADD('modelSet', id);
-    if(model.ver === 'task1') await client.SADD('task1ModelSet', id);
-    else if(model.ver === 'task2') await client.SADD('task2ModelSet', id);
+    if (model.ver === 'task1') await client.SADD('task1ModelSet', id);
+    else if (model.ver === 'task2') await client.SADD('task2ModelSet', id);
     await client.set(id, JSON.stringify(wroteModel));
 
     model.pyEval = await setOneModelPyEvals(id, client);
@@ -139,13 +139,41 @@ const setOneModelEval = async (modelID, evalSet, client) => {
     const querys = JSON.parse((await client.get(model.querys)));
 
     const qids = querys.map(query => query.qid);
-    const evalInNeed = evalSet.filter(evalID => qids.includes(evalID.split('eval')[0]));
 
-    const evalList = await getEvalInNeed(evalInNeed, client);
+    if (model.ver === 'task1') {
+        const evalInNeed = evalSet.filter(evalID => qids.includes(evalID.split('eval')[0]));
 
-    const evals = genEvalForOneModel(querys, evalList);
+        const evalList = await getEvalInNeed(evalInNeed, client);
 
-    model.evals = evals;
+        const evals = genEvalForOneModel(querys, evalList);
+
+        model.evals = evals;
+    }
+
+    if (model.ver === 'task2') {
+        const promises = [];
+        querys.forEach(query => {
+            const toPy = [];
+            query.data.forEach(doc => {
+                toPy.push({ topic_id: query.qid, seq_no: doc.seq_id, page_id: '' + doc.docno });
+            })
+            promises.push(calcOneModelPy(toPy, 2));
+        })
+        await Promise.all(promises).then(evals => {
+            const evalsInFormat = evals.reduce((pre, curr) => {
+                const qid = Object.keys(curr['EE-L'])[0];
+                const ret = {[qid]:{}};
+
+                for (let k in curr)
+                    ret[qid][k] = curr[k][qid];
+                pre = {...pre, ...ret};
+                return pre;
+            }, {})
+            model.evals = evalsInFormat
+        });
+    }
+
+
     return client.set(modelID, JSON.stringify(model)).then(() => { model.querys = querys; return model });
 }
 
