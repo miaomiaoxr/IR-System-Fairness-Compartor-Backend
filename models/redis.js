@@ -28,6 +28,8 @@ const setOnefile = async (model, client) => {
     let wroteModel = { ...model };
     wroteModel.querys = dataID;
     await client.SADD('modelSet', id);
+    if(model.ver === 'task1') await client.SADD('task1ModelSet', id);
+    else if(model.ver === 'task2') await client.SADD('task2ModelSet', id);
     await client.set(id, JSON.stringify(wroteModel));
 
     model.pyEval = await setOneModelPyEvals(id, client);
@@ -147,13 +149,13 @@ const setOneModelEval = async (modelID, evalSet, client) => {
     return client.set(modelID, JSON.stringify(model)).then(() => { model.querys = querys; return model });
 }
 
-const setAllModelsEval = async () => { //every time upload a eval file, call this function
+const setAllModelsEval = async () => { //every time upload a eval file, call this function(only for task1)
     const client = await clientInit();
-    const modelSet = await client.SMEMBERS('modelSet');
+    const task1ModelSet = await client.SMEMBERS('task1ModelSet');
     const evalSet = await client.SMEMBERS('evalSet');
 
     const promises = [];
-    modelSet.forEach(modelID => {
+    task1ModelSet.forEach(async (modelID) => {
         promises.push(setOneModelEval(modelID, evalSet, client));
     })
 
@@ -181,7 +183,7 @@ const setOneModelPyEvals = async (modelID, client) => {
     const model = JSON.parse((await client.get(modelID)));
     const querys = JSON.parse((await client.get(model.querys)));
     let ver = 1;
-    if(model.ver === 'task2') ver = 2; 
+    if (model.ver === 'task2') ver = 2;
 
     const toPy = [];
     querys.forEach(query => {
@@ -189,11 +191,11 @@ const setOneModelPyEvals = async (modelID, client) => {
             if (!doc.seq_id)
                 toPy.push({ topic_id: '101', page_id: '' + doc.docno });//Python eval script need topic_id to be a number
             else
-                toPy.push({ topic_id: '101',  seq_no: doc.seq_id, page_id: '' + doc.docno });
+                toPy.push({ topic_id: '101', seq_no: doc.seq_id, page_id: '' + doc.docno });
         })
     })
 
-    return calcOneModelPy(toPy,ver).then(data => {
+    return calcOneModelPy(toPy, ver).then(data => {
         for (let k in data)
             data[k] = data[k]['101'];//remove useless topic_id
         model.pyEval = data;
