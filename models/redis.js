@@ -103,12 +103,12 @@ const delAll = async () => {
     })
 }
 
-const getEval = async () => {
-    const client = await clientInit();
-    const data = await client.get('eval');
-    await client.quit();
-    return JSON.parse(data);
-}
+// const getEval = async () => {
+//     const client = await clientInit();
+//     const data = await client.get('eval');
+//     await client.quit();
+//     return JSON.parse(data);
+// }
 
 const deleteOneModel = async (modelID) => {
     const client = await clientInit();
@@ -193,19 +193,19 @@ const setAllModelsEval = async () => { //every time upload a eval file, call thi
     })
 }
 
-const qidWithDocNos = async (data) => {//all data in redis, maybe we need a specific model version
-    return readDataFromRedis().then(data => {
-        const ret = [];
-        data.forEach(model => {
-            model.querys.forEach(query => {
-                query.data.forEach(doc => {
-                    ret.push({ topic_id: query.qid, page_id: '' + doc.docno });
-                })
-            })
-        })
-        return ret;
-    })
-}
+// const qidWithDocNos = async (data) => {//all data in redis, maybe we need a specific model version
+//     return readDataFromRedis().then(data => {
+//         const ret = [];
+//         data.forEach(model => {
+//             model.querys.forEach(query => {
+//                 query.data.forEach(doc => {
+//                     ret.push({ topic_id: query.qid, page_id: '' + doc.docno });
+//                 })
+//             })
+//         })
+//         return ret;
+//     })
+// }
 
 const setOneModelPyEvals = async (modelID, client) => {
     const model = JSON.parse((await client.get(modelID)));
@@ -233,4 +233,4 @@ const setOneModelPyEvals = async (modelID, client) => {
 
 // delAll()
 // addToRedis();
-module.exports = { readDataFromRedis, addOneModelDataToRedis, addEval, getEval, deleteOneModel, renameOneModel, setAllModelsEval, qidWithDocNos, setOneModelPyEvals };
+module.exports = { readDataFromRedis, addOneModelDataToRedis, addEval, deleteOneModel, renameOneModel, setAllModelsEval, setOneModelPyEvals };

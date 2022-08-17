@@ -1,6 +1,5 @@
 const { PythonShell } = require('python-shell');
 const path = require('path');
-// const { qidWithDocNos } = require('./redis');
 
 const options = {
     mode: 'json',//pass JSON to python and get JSON back
@@ -71,9 +70,9 @@ function calcOneModel(queryDocNOs, ver) {
         })
 
         pyshell.end(function (err, code, signal) {
-            console.log('The exit code was: ' + code);
-            console.log('The exit signal was: ' + signal);
-            console.log('finished');
+            // console.log('The exit code was: ' + code);
+            // console.log('The exit signal was: ' + signal);
+            // console.log('finished');
             reject(err);
         });
     })
