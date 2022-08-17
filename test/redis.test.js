@@ -8,7 +8,7 @@ const {
     setOneModelPyEvals } = require('../models/redis');
 
 describe('Test functions with redis', () => {
-    test('Add a model to redis ,then delete', () => {
+    test('Add a model to redis ,then delete', async () => {
         const model = {
             modelName: 'testModel',
             querys: [
@@ -63,34 +63,40 @@ describe('Test functions with redis', () => {
 
         let id = '';
 
-        addOneModelDataToRedis(model).then(data => {//first add this model into redis
+        await addOneModelDataToRedis(model).then(data => {//first add this model into redis
             expect(data.modelName).toBe(model.modelName);
             expect(data.querys.length).toBe(model.querys.length);
             expect(data).toHaveProperty('id');
             expect(data).toHaveProperty('ver');
             id = data.id;
             return;
-        }).then(() => {
-            return readDataFromRedis().then(data => {//ensure the model is in redis
-                expect(data.length).toBeGreaterThan(0);
-                expect(data.find(item => item.id === id)).toBeDefined();
-                return data;
-            })
-        }).then(async ()=>{
-            await addEval(evalData);
-            await setAllModelsEval();
+        })
+
+        await readDataFromRedis().then(data => {//ensure the model is in redis
+            expect(data.length).toBeGreaterThan(0);
+            expect(data.find(item => item.id === id)).toBeDefined();
+        })
+
+        await addEval(evalData);
+        await setAllModelsEval();
+        await readDataFromRedis().then(data => {
+            expect(data.find(item => item.id === id).evals).toBeDefined();
+        })
+        await renameOneModel(id, 'testNewName').then(() => {
             return readDataFromRedis().then(data => {
-                expect(data.find(item => item.id === id).eval).toBeDefined();
+                expect(data.find(item => item.id === id).modelName).toBe('testNewName');
                 return data;
             })
-        }).then(() => {
-            deleteOneModel(id).then(() => {
-                return readDataFromRedis().then(data => {
-                    expect(data.find(item => item.id === id)).toBeUndefined();
-                }
-                )
+        })
+
+        return deleteOneModel(id).then(() => {
+            return readDataFromRedis().then(data => {
+                expect(data.find(item => item.id === id)).toBeUndefined();
             }
             )
-        })
+        }
+        )
+
     })
+
 })
