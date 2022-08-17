@@ -47,9 +47,23 @@ describe('Test functions with redis', () => {
             ver: 'task1'
         }
 
+        const evalData = [
+            {
+                "id": 101,
+                "title": "Mathematicians",
+                "rel_docs": [
+                    15807,
+                    41999,
+                    49731,
+                    61636,
+                    11254442
+                ]
+            }
+        ]
+
         let id = '';
 
-        addOneModelDataToRedis(model).then(data => {
+        addOneModelDataToRedis(model).then(data => {//first add this model into redis
             expect(data.modelName).toBe(model.modelName);
             expect(data.querys.length).toBe(model.querys.length);
             expect(data).toHaveProperty('id');
@@ -57,9 +71,17 @@ describe('Test functions with redis', () => {
             id = data.id;
             return;
         }).then(() => {
-            return readDataFromRedis().then(data => {
+            return readDataFromRedis().then(data => {//ensure the model is in redis
                 expect(data.length).toBeGreaterThan(0);
                 expect(data.find(item => item.id === id)).toBeDefined();
+                return data;
+            })
+        }).then(async ()=>{
+            await addEval(evalData);
+            await setAllModelsEval();
+            return readDataFromRedis().then(data => {
+                expect(data.find(item => item.id === id).eval).toBeDefined();
+                return data;
             })
         }).then(() => {
             deleteOneModel(id).then(() => {
