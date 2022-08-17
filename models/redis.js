@@ -113,6 +113,11 @@ const delAll = async () => {
 const deleteOneModel = async (modelID) => {
     const client = await clientInit();
     const data = JSON.parse((await client.get(modelID)));
+
+    const ver = data.ver;
+    if(ver === 'task1') await client.SREM('task1ModelSet', modelID);
+    else if(ver === 'task2') await client.SREM('task2ModelSet', modelID);
+
     await client.del(data.querys);
     await client.SREM('modelSet', modelID);
     await client.del(modelID);
