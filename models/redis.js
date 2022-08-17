@@ -116,7 +116,7 @@ const deleteOneModel = async (modelID) => {
     await client.del(data.querys);
     await client.SREM('modelSet', modelID);
     await client.del(modelID);
-    await client.quit();
+    return client.quit();
 }
 
 const renameOneModel = async (modelID, newName) => {
@@ -126,7 +126,7 @@ const renameOneModel = async (modelID, newName) => {
     data.modelName = newName;
     await client.set(modelID, JSON.stringify(data));
 
-    await client.quit();
+    return client.quit();
 }
 
 const getEvalInNeed = async (evalInNeed, client) => {
