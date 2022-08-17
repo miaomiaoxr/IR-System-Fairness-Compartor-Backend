@@ -50,12 +50,15 @@ test('Eval for one model(Presicion, Recall and F1', () => {
         }
     ]
 
-    expect(genEvalForOneModel(querys, evalData)).toEqual({
+    const res = genEvalForOneModel(querys, evalData);
+    res.f1 = Number(res.f1);
+
+    expect(res).toEqual({
         '101': {
             'precision':0.5,
             'recall': 0.2,
         },
-        "f1": "0.28571",
+        "f1": expect.closeTo(0.28,1)//"0.28571"
     }
     );
 })
