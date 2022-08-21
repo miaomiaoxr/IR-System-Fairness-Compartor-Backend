@@ -4,11 +4,10 @@ const {
     addEval,
     deleteOneModel,
     renameOneModel,
-    setAllModelsEval,
-    setOneModelPyEvals } = require('../models/redis');
+    setAllModelsEval, } = require('../models/redis');
 
 describe('Test functions with redis', () => {
-    test('Add a model to redis ,then delete', async () => {
+    test('Test the entire life cycle of a model, from input to delete', async () => {
         const model = {
             modelName: 'testModel',
             querys: [
