@@ -29,7 +29,7 @@ const setOnefile = async (model, client) => {
     wroteModel.querys = dataID;
     await client.SADD('modelSet', id);
     if (model.ver === 'task1') await client.SADD('task1ModelSet', id);
-    else if (model.ver === 'task2') await client.SADD('task2ModelSet', id);
+    else await client.SADD('task2ModelSet', id);
     await client.set(id, JSON.stringify(wroteModel));
 
     model.pyEval = await setOneModelPyEvals(id, client);
@@ -62,9 +62,6 @@ const readDataFromRedis = async () => {
     return Promise.all(promises).then(models => {
         models.forEach(model => res.push(model));
     }).then(() => client.quit()).then(() => res);
-    // await client.quit();
-
-    // return res;
 }
 
 const addOneModelDataToRedis = async (model) => {
@@ -92,23 +89,6 @@ const addOneEval = async (json, client) => {
     return client.SADD('evalSet', json.id + 'eval')
 }
 
-const delAll = async () => {
-    const client = await clientInit();
-    const promises = [];
-    const keys = await client.keys('*')
-
-    keys.forEach(key => promises.push(client.del(key)))
-    await Promise.all(promises).then(async () => {
-        await client.quit();
-    })
-}
-
-// const getEval = async () => {
-//     const client = await clientInit();
-//     const data = await client.get('eval');
-//     await client.quit();
-//     return JSON.parse(data);
-// }
 
 const deleteOneModel = async (modelID) => {
     const client = await clientInit();
@@ -116,7 +96,7 @@ const deleteOneModel = async (modelID) => {
 
     const ver = data.ver;
     if(ver === 'task1') await client.SREM('task1ModelSet', modelID);
-    else if(ver === 'task2') await client.SREM('task2ModelSet', modelID);
+    else await client.SREM('task2ModelSet', modelID);
 
     await client.del(data.querys);
     await client.SREM('modelSet', modelID);
@@ -198,19 +178,6 @@ const setAllModelsEval = async () => { //every time upload a eval file, call thi
     })
 }
 
-// const qidWithDocNos = async (data) => {//all data in redis, maybe we need a specific model version
-//     return readDataFromRedis().then(data => {
-//         const ret = [];
-//         data.forEach(model => {
-//             model.querys.forEach(query => {
-//                 query.data.forEach(doc => {
-//                     ret.push({ topic_id: query.qid, page_id: '' + doc.docno });
-//                 })
-//             })
-//         })
-//         return ret;
-//     })
-// }
 
 const setOneModelPyEvals = async (modelID, client) => {
     const model = JSON.parse((await client.get(modelID)));
