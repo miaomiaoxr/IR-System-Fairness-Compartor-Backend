@@ -7,20 +7,12 @@ const { addOneModelDataToRedis, addEval, setAllModelsEval } = require('./redis')
 const csvFolder = path.join(__dirname, '..', 'csvs');
 const evalFolder = path.join(__dirname, '..', 'eval');
 
-// async function listDir() { //list all files in the csv folder
-//     try {
-//         return fs.promises.readdir(csvFolder);
-//     } catch (err) {
-//         console.error('Error occured while reading directory!', err);
-//     }
-// }
 
 const readCSVFile = async (file) => {
     return new Promise((resolve, reject) => {
         csvtojson({ ignoreEmpty: true })
             .fromFile(path.join(csvFolder, file))
             .then(async (data) => {
-                // await fs.promises.unlink(path.join(csvFolder, file));//delete the file after reading
                 resolve({ file, data });
             })
             .catch((err) => {
@@ -35,8 +27,6 @@ const trimQuery = (curr) => {
     delete curr.field1;
 
     delete curr.genders;
-    // curr.gender = JSON.parse(curr.gender.replaceAll("'", '"'))// "[]" to []
-    // curr.geographic_locations = JSON.parse(curr.geographic_locations.replaceAll("'", '"'))
 
     for (let prop in curr) {
         if (curr.hasOwnProperty(prop)) {
@@ -80,26 +70,6 @@ const fileDataToJson = JsonWithFile => {
     return querys;
 }
 
-// const readData = async () => {
-//     const files = await listDir();
-//     const promises = [];
-//     const data = []
-
-//     files.forEach(file => {
-//         promises.push(readCSVFile(file));
-//     }
-//     );
-
-//     return await Promise.all(promises).then((jsons) => {//jsons from different files
-//         jsons.forEach(JsonWithFile => {
-//             const querys = fileDataToJson(JsonWithFile);
-//             data.push(querys);
-//         })
-//         return data;//list of models
-//     }
-//     )
-
-// }
 
 const processFile = async (file) => {
     return readCSVFile(file).then((jsonWithFile) => {
@@ -116,7 +86,6 @@ const processEval = async (file) => {
 }
 
 
-// readData().then((data) => console.log(data));//this will DEL the csv files
 
 module.exports = { processFile, processEval };
 

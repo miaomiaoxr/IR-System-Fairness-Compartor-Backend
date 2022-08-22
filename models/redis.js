@@ -7,7 +7,7 @@ const e = require('cors');
 const clientInit = () => {
     return new Promise(async (resolve, reject) => {
         // const client = redis.createClient({
-        //     socket: { host: '192.168.37.128' }//JUST ON MY COMPUTER
+        //     socket: { host: '192.168.37.128' }//Use Linux in VMWare under NAT mode
         // });
         const client = redis.createClient();//WSL version
 
